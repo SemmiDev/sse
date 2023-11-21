@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Notification Page</title>
+</head>
+<body class="font-sans bg-gray-100">
+
+<div class="container mx-auto mt-8">
+    <div class="flex bg-white p-6 rounded-lg shadow-md">
+        <div class="flex-shrink-0">
+            <img src="https://placekitten.com/50/50" alt="Profile Picture" class="h-12 w-12 rounded-full">
+        </div>
+        <div class="ml-6">
+            <h1 class="text-xl font-semibold mb-2">
+                {{ .Username }}
+            </h1>
+
+            <div id="notification-container"></div>
+            <input type="hidden" id="username-input" value="{{ .Username }}"
+                   readonly>
+        </div>
+    </div>
+</div>
+
+<script>
+    const notificationContainer = document.getElementById('notification-container');
+    const usernameInput = document.getElementById('username-input');
+
+    // Function to append a new notification to the top of the DOM
+    function appendNotification(message) {
+        const div = document.createElement('div');
+        div.className = 'bg-white rounded-lg p-4 mb-4 shadow-md';
+        div.innerHTML = `
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <img src="https://placekitten.com/40/40" alt="Profile Picture" class="h-8 w-8 rounded-full">
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">${usernameInput.value}</p>
+                    <p class="text-sm text-gray-500">${message}</p>
+                </div>
+            </div>
+        `;
+        // Use prepend to add the new notification at the top
+        notificationContainer.prepend(div);
+    }
+
+    // Function to handle SSE
+    function listenSSE() {
+        const username = usernameInput.value;
+        const eventSource = new EventSource(`/users/${username}/notifications/listen`);
+        eventSource.onmessage = function (event) {
+            appendNotification(event.data);
+        };
+        eventSource.onerror = function (error) {
+            console.error('EventSource failed:', error);
+            eventSource.close();
+        };
+    }
+
+    // Start listening for SSE when the page loads
+    window.addEventListener('load', function () {
+        listenSSE();
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1 @@
+POST http://localhost:8080/users/sammidev123/notifications?message=helo sammi
